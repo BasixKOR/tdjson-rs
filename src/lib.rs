@@ -17,10 +17,25 @@ use std::ops::Drop;
 
 use std::sync::Arc;
 
-pub fn set_log_file(path: &str) -> Result<i32, std::ffi::NulError> {
+pub enum LogFileError {
+    TDLibError,
+    CStringError(std::ffi::NulError)
+}
+
+impl From<std::ffi::NulError> for LogFileError {
+    fn from(error: std::ffi::NulError) -> Self {
+        LogFileError::CStringError(error)
+    }
+}
+
+pub fn set_log_file(path: &str) -> Result<(), LogFileError> {
     let cpath = CString::new(path)?;
     unsafe {
-        Ok(td_set_log_file_path(cpath.as_ptr()))
+        if td_set_log_file_path(cpath.as_ptr()) == 1 {
+            Ok(())
+        } else {
+            Err(LogFileError::TDLibError)
+        }
     }
 }
 
