@@ -52,11 +52,35 @@ pub fn set_log_file(path: &str) -> Result<(), LogError> {
   }
 }
 
-pub fn set_log_verbosity_level(level: i32) -> Result<(), LogError> {
+pub enum VerbosityLevel {
+  FatalErrors,
+  Errors,
+  Warnings,
+  Information,
+  Debug,
+  Verbose,
+  Custom(i32),
+}
+
+fn _set_log_verbosity_level(level: i32) -> Result<(), LogError> {
   if level < 1 || level > 1024 {
     Err(LogError::OutOfRangeError)
   } else {
-    unsafe { td_set_log_verbosity_level(level); };
+    unsafe { td_set_log_verbosity_level(level) };
     Ok(())
+  }
+}
+
+/// Sets verbosity level of TDLib log. By default it uses  a log verbosity level of 5.
+///
+pub fn set_log_verbosity_level(level: VerbosityLevel) -> Result<(), LogError> {
+  match level {
+    VerbosityLevel::FatalErrors => _set_log_verbosity_level(0),
+    VerbosityLevel::Errors => _set_log_verbosity_level(1),
+    VerbosityLevel::Warnings => _set_log_verbosity_level(2),
+    VerbosityLevel::Information => _set_log_verbosity_level(3),
+    VerbosityLevel::Debug => _set_log_verbosity_level(4),
+    VerbosityLevel::Verbose => _set_log_verbosity_level(5),
+    VerbosityLevel::Custom(i) => _set_log_verbosity_level(i),
   }
 }
