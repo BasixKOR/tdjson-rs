@@ -16,6 +16,7 @@ use std::time::Duration;
 use std::ops::Drop;
 use std::sync::Arc;
 
+/// Log interface of TDLib.
 pub mod log;
 
 struct UnsafeClient {

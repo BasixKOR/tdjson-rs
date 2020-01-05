@@ -2,24 +2,27 @@ extern crate tdjson_sys;
 
 use tdjson_sys::{td_set_log_file_path, td_set_log_verbosity_level};
 
-use std::ffi::CString;
 use std::error::Error;
+use std::ffi::CString;
 use std::fmt;
 
-/// This enum specifies
+/// Error when failed to perform log-related task.
 #[derive(Debug)]
 pub enum LogError {
+  /// TDLib failes to set a new log file.
   TDLibError,
+  /// verbosity level is not between 1 and 1024.
   OutOfRangeError,
+  /// Thrown if the log file path contains a zero byte.
   CStringError(std::ffi::NulError),
-}
+} // TODO Refactor this
 
 impl fmt::Display for LogError {
   fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
     match self {
       LogError::CStringError(err) => err.fmt(f),
-      LogError::TDLibError => write!(f, "TDLib error"),
-      LogError::OutOfRangeError => write!(f, "log_verbosity must be between 1 and 1024.")
+      LogError::TDLibError => write!(f, "TDLib failed to set a new log file."),
+      LogError::OutOfRangeError => write!(f, "log_verbosity must be between 1 and 1024."),
     }
   }
 }
@@ -40,7 +43,11 @@ impl From<std::ffi::NulError> for LogError {
   }
 }
 
-/// Sets TDLib log file path for your application.`
+/// Sets TDLib log file path for your application.
+///
+/// # Errors
+/// This function will return a CStringError if the supplied bytes contain an
+/// internal 0 byte, or a TDLibError if TDLib returns false.
 pub fn set_log_file(path: &str) -> Result<(), LogError> {
   let cpath = CString::new(path)?;
   unsafe {
@@ -52,13 +59,21 @@ pub fn set_log_file(path: &str) -> Result<(), LogError> {
   }
 }
 
+/// Represents the verbosity level in TDLib.
 pub enum VerbosityLevel {
+  /// Corresponds to level 0 in TDLib.
   FatalErrors,
+  /// Corresponds to level 1 in TDLib.
   Errors,
+  /// Corresponds to level 2 in TDLib.
   Warnings,
+  /// Corresponds to level 3 in TDLib.
   Information,
+  /// Corresponds to level 4 in TDLib.
   Debug,
+  /// Corresponds to level 5 in TDLib.
   Verbose,
+  /// Uses custom value instead of predefined levels. Up to 1024 can be used to enable even more logging.
   Custom(i32),
 }
 
@@ -73,6 +88,9 @@ fn _set_log_verbosity_level(level: i32) -> Result<(), LogError> {
 
 /// Sets verbosity level of TDLib log. By default it uses  a log verbosity level of 5.
 ///
+/// # Errors
+/// This function will return an LogError::OutOfRangeError if the Custom level is not
+/// between 1 and 1024.
 pub fn set_log_verbosity_level(level: VerbosityLevel) -> Result<(), LogError> {
   match level {
     VerbosityLevel::FatalErrors => _set_log_verbosity_level(0),
