@@ -10,8 +10,8 @@ pub use self::errors::*;
 /// Sets TDLib log file path for your application.
 ///
 /// # Errors
-/// This function will return a CStringError if the supplied bytes contain an
-/// internal 0 byte, or a TDLibError if TDLib returns false.
+/// This function will return a LogError::CStringError if the supplied bytes contain an
+/// internal 0 byte, or a LogError::TDLibError if TDLib returns false.
 pub fn set_log_file(path: &str) -> Result<(), LogError> {
   let cpath = CString::new(path)?;
   unsafe {
@@ -41,9 +41,9 @@ pub enum VerbosityLevel {
   Custom(i32),
 }
 
-fn _set_log_verbosity_level(level: i32) -> Result<(), LogError> {
+fn _set_log_verbosity_level(level: i32) -> Result<(), OutOfRangeError> {
   if level < 1 || level > 1024 {
-    Err(LogError::OutOfRangeError)
+    Err(OutOfRangeError(level))
   } else {
     unsafe { td_set_log_verbosity_level(level) };
     Ok(())
@@ -53,9 +53,9 @@ fn _set_log_verbosity_level(level: i32) -> Result<(), LogError> {
 /// Sets verbosity level of TDLib log. By default it uses  a log verbosity level of 5.
 ///
 /// # Errors
-/// This function will return an LogError::OutOfRangeError if the Custom level is not
+/// This function will return an OutOfRangeError if the Custom level is not
 /// between 1 and 1024.
-pub fn set_log_verbosity_level(level: VerbosityLevel) -> Result<(), LogError> {
+pub fn set_log_verbosity_level(level: VerbosityLevel) -> Result<(), OutOfRangeError> {
   match level {
     VerbosityLevel::FatalErrors => _set_log_verbosity_level(0),
     VerbosityLevel::Errors => _set_log_verbosity_level(1),

@@ -6,8 +6,6 @@ use std::fmt;
 pub enum LogError {
   /// TDLib failes to set a new log file.
   TDLibError,
-  /// verbosity level is not between 1 and 1024.
-  OutOfRangeError,
   /// Thrown if the log file path contains a zero byte.
   CStringError(std::ffi::NulError),
 } // TODO Refactor this
@@ -17,7 +15,6 @@ impl fmt::Display for LogError {
     match self {
       LogError::CStringError(err) => err.fmt(f),
       LogError::TDLibError => write!(f, "TDLib failed to set a new log file."),
-      LogError::OutOfRangeError => write!(f, "log_verbosity must be between 1 and 1024."),
     }
   }
 }
@@ -37,3 +34,13 @@ impl From<std::ffi::NulError> for LogError {
     LogError::CStringError(error)
   }
 }
+
+#[derive(Debug)]
+pub struct OutOfRangeError(pub i32);
+
+impl fmt::Display for OutOfRangeError {
+  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    write!(f, "{} is not in range of 1 and 1024", self.0)
+  }
+}
+impl Error for OutOfRangeError {}
