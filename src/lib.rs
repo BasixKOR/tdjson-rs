@@ -14,36 +14,9 @@ use std::ffi::{
 
 use std::time::Duration;
 use std::ops::Drop;
-
 use std::sync::Arc;
 
-pub enum LogFileError {
-    TDLibError,
-    CStringError(std::ffi::NulError)
-}
-
-impl From<std::ffi::NulError> for LogFileError {
-    fn from(error: std::ffi::NulError) -> Self {
-        LogFileError::CStringError(error)
-    }
-}
-
-pub fn set_log_file(path: &str) -> Result<(), LogFileError> {
-    let cpath = CString::new(path)?;
-    unsafe {
-        if td_set_log_file_path(cpath.as_ptr()) == 1 {
-            Ok(())
-        } else {
-            Err(LogFileError::TDLibError)
-        }
-    }
-}
-
-pub fn set_log_verbosity_level(level : i32) {
-    unsafe {
-        td_set_log_verbosity_level(level);
-    }
-}
+pub mod log;
 
 struct UnsafeClient {
     client_ptr: *mut c_void
